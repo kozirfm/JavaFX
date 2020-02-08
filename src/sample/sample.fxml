@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<GridPane fx:controller="sample.Controller" xmlns:fx="http://javafx.com/fxml" hgap="5" vgap="5">
+
+    <TextArea GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"
+              GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS" editable="false" fx:id="textArea"/>
+    <TextField GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" onKeyPressed="#pressEnter" fx:id="textField"/>
+    <Button GridPane.columnIndex="1" GridPane.rowIndex="1" onKeyPressed="#pressEnter" onAction="#sendMessage" text="Отправить"/>
+
+</GridPane>
