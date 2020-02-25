@@ -40,7 +40,7 @@ public class ClientHandler {
                                 server.subscribe(this);
                                 System.out.println("Клиент " + nick + " подключился");
                                 break;
-                            }else{
+                            } else {
                                 sendMessage("Неверный логин / пароль");
                             }
                         }
@@ -49,11 +49,31 @@ public class ClientHandler {
                     //цикл работы
                     while (true) {
                         String str = in.readUTF();
+                        //Обрабатывает /w и оповещает если сообщение не корректное.
+                        if (str.startsWith("/w")) {
+                            String[] token = str.split(" ", 3);
+                            switch (token.length) {
+                                case (1):
+                                    sendMessage("Вы не ввели адресата сообщения");
+                                    break;
+                                case (2):
+                                    sendMessage("Вы не ввели сообщение");
+                                    break;
+                                case (3):
+                                    if (token[1].equals(nick)) {
+                                        sendMessage("Вы отправили сообщение себе: " + token[2]);
+                                    } else {
+                                        server.privateMessage(token[1], nick, token[2]);
+                                    }
+                                    break;
+                            }
+                        } else {
+                            server.broadcastMessage(str, nick);
+                        }
                         if (str.equals("/end")) {
                             out.writeUTF("/end");
                             break;
                         }
-                        server.broadcastMessage(str);
                     }
                 } catch (IOException e) {
                     e.getStackTrace();

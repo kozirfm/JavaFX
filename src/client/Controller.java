@@ -73,9 +73,9 @@ public class Controller implements Initializable {
             new Thread(() -> {
                 try {
                     //цикл аутентификации
-                    while (true){
+                    while (true) {
                         String str = in.readUTF();
-                        if (str.startsWith("/authok ")){
+                        if (str.startsWith("/authok ")) {
                             setAuthenticated(true);
                             nickname = str.split(" ")[1];
                             break;
@@ -88,18 +88,22 @@ public class Controller implements Initializable {
                     //цикл работы
                     while (true) {
                         String str = in.readUTF();
-                        if (str.equals("/end")){
+                        //Меняет собственное имя на "Я: " для более понятного отображения
+                        if (str.startsWith(nickname)) {
+                            String[] token = str.split(" ", 2);
+                            textArea.appendText("Я: " + token[1] + "\n");
+                        } else {
+                            textArea.appendText(str + "\n");
+                        }
+                        if (str.equals("/end")) {
                             setAuthenticated(false);
                             break;
                         }
-                        textArea.appendText(str + "\n");
-
                     }
-                }catch (SocketException e){
+                } catch (SocketException e) {
                     System.out.println("Сервер отключился");
                     setAuthenticated(false);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     e.getStackTrace();
                 } finally {
                     try {
@@ -136,7 +140,7 @@ public class Controller implements Initializable {
     }
 
     public void tryToAuth(ActionEvent actionEvent) {
-        if (socket == null || socket.isClosed()){
+        if (socket == null || socket.isClosed()) {
             connect();
         }
 
@@ -144,15 +148,15 @@ public class Controller implements Initializable {
             out.writeUTF("/auth " + loginField.getText() + " " + passwordField.getText());
             passwordField.clear();
 
-        } catch (NullPointerException e){
+        } catch (NullPointerException e) {
             System.out.println("Сервер не доступен");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    void setTitle(String title){
-        Platform.runLater(()->{
+
+    void setTitle(String title) {
+        Platform.runLater(() -> {
             ((Stage) textField.getScene().getWindow()).setTitle(title);
         });
     }

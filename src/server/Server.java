@@ -8,10 +8,6 @@ import java.net.Socket;
 import java.util.Vector;
 
 public class Server {
-    public Vector<ClientHandler> getClients() {
-        return clients;
-    }
-
     private Vector<ClientHandler> clients;
     private AuthService authService;
 
@@ -62,9 +58,18 @@ public class Server {
 
     }
 
-    public void broadcastMessage(String msg) {
+    public void broadcastMessage(String msg, String sender) {
         for (ClientHandler c : clients) {
-            c.sendMessage(msg);
+            c.sendMessage(sender + ": " + msg);
+        }
+    }
+
+    //Метод приватных сообщений. В параметрах получатель, отправитель и сообщение.
+    public void privateMessage(String recipient, String sender, String msg) {
+        for (ClientHandler c : clients) {
+            if (c.getNick().equals(recipient) || c.getNick().equals(sender)) {
+                c.sendMessage(sender + ": " + msg);
+            }
         }
     }
 
