@@ -75,7 +75,7 @@ public class Controller implements Initializable {
             stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent windowEvent) {
-                    if(socket != null){
+                    if(socket != null && !socket.isClosed()){
                         try {
                             out.writeUTF("/end");
                         } catch (IOException e) {
