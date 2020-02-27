@@ -17,6 +17,10 @@ public class ClientHandler {
         return nick;
     }
 
+    public String getLogin() {
+        return login;
+    }
+
     public ClientHandler(Socket socket, Server server) {
         try {
             this.socket = socket;
@@ -26,20 +30,29 @@ public class ClientHandler {
 
             new Thread(() -> {
                 try {
-
                     //цикл аутентификации
                     while (true) {
                         String str = in.readUTF();
+                        if (str.equals("/end")) {
+                            throw new RuntimeException("Закрыли крестиком");
+                        }
                         if (str.startsWith("/auth ")) {
                             String[] token = str.split(" ");
+                            if (token.length < 3){
+                                continue;
+                            }
                             String newNick = server.getAuthService().getNicknameByLoginAndPassword(token[1], token[2]);
                             if (newNick != null) {
-                                sendMessage("/authok " + newNick);
-                                nick = newNick;
                                 login = token[1];
-                                server.subscribe(this);
-                                System.out.println("Клиент " + nick + " подключился");
-                                break;
+                                if(!server.isLoginAuthorized(login)){
+                                    sendMessage("/authok " + newNick);
+                                    nick = newNick;
+                                    server.subscribe(this);
+                                    System.out.println("Клиент " + nick + " подключился");
+                                    break;
+                                }else{
+                                    sendMessage("С этим логином уже авторизовались");
+                                }
                             } else {
                                 sendMessage("Неверный логин / пароль");
                             }
@@ -49,33 +62,25 @@ public class ClientHandler {
                     //цикл работы
                     while (true) {
                         String str = in.readUTF();
-                        //Обрабатывает /w и оповещает если сообщение не корректное.
-                        if (str.startsWith("/w")) {
-                            String[] token = str.split(" ", 3);
-                            switch (token.length) {
-                                case (1):
-                                    sendMessage("Вы не ввели адресата сообщения");
-                                    break;
-                                case (2):
-                                    sendMessage("Вы не ввели сообщение");
-                                    break;
-                                case (3):
-                                    if (token[1].equals(nick)) {
-                                        sendMessage("Вы отправили сообщение себе: " + token[2]);
-                                    } else {
-                                        server.privateMessage(token[1], nick, token[2]);
-                                    }
-                                    break;
+                        if(str.startsWith("/")){
+                            if (str.equals("/end")) {
+                                out.writeUTF("/end");
+                                break;
                             }
-                        } else {
+                            if (str.startsWith("/w")){
+                                String[] token = str.split(" ", 3);
+                                if(token.length == 3){
+                                    server.privateMessage(this, token[1], token[2]);
+                                }
+                            }
+                        }else {
                             server.broadcastMessage(str, nick);
                         }
-                        if (str.equals("/end")) {
-                            out.writeUTF("/end");
-                            break;
-                        }
                     }
-                } catch (IOException e) {
+                } catch (RuntimeException e){
+                    System.out.println("Закрыли крестиком");
+                }
+                catch (IOException e) {
                     e.getStackTrace();
                 } finally {
                     server.unsubscribe(this);
@@ -98,7 +103,6 @@ public class ClientHandler {
 
                 }
             }).start();
-
         } catch (IOException e) {
             e.printStackTrace();
         }

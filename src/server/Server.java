@@ -32,7 +32,6 @@ public class Server {
 
             while (true) {
                 socket = server.accept();
-                System.out.println("Клиент подключился");
                 new ClientHandler(socket, this);
 
             }
@@ -64,21 +63,47 @@ public class Server {
         }
     }
 
-    //Метод приватных сообщений. В параметрах получатель, отправитель и сообщение.
-    public void privateMessage(String recipient, String sender, String msg) {
+    public void privateMessage(ClientHandler sender, String receiver, String msg) {
+        String message = String.format("[ %s ] private [ %s ] : %s", sender.getNick(), receiver, msg);
         for (ClientHandler c : clients) {
-            if (c.getNick().equals(recipient) || c.getNick().equals(sender)) {
-                c.sendMessage(sender + ": " + msg);
+            if (c.getNick().equals(receiver)) {
+                c.sendMessage(message);
+                if (!c.getNick().equals(receiver)){
+                    sender.sendMessage(message);
+                }
+                return;
             }
         }
+        sender.sendMessage("Пользователь не найден: " + receiver);
     }
 
     public void subscribe(ClientHandler clientHandler) {
         clients.add(clientHandler);
+        broadcastClientList();
     }
 
     public void unsubscribe(ClientHandler clientHandler) {
         clients.remove(clientHandler);
+        broadcastClientList();
     }
 
+    public boolean isLoginAuthorized(String login){
+        for (ClientHandler c : clients) {
+            if (c.getLogin().equals(login)){
+                return  true;
+            }
+        }
+        return false;
+    }
+
+    public void broadcastClientList(){
+        StringBuilder sb = new StringBuilder("/clientlist ");
+        for (ClientHandler c: clients) {
+            sb.append(c.getNick()).append(" ");
+        }
+        String msg = sb.toString();
+        for (ClientHandler c : clients) {
+            c.sendMessage(msg);
+        }
+    }
 }

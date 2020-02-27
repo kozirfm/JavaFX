@@ -7,17 +7,21 @@
 <VBox fx:controller="client.Controller"
       xmlns:fx="http://javafx.com/fxml" alignment="CENTER">
 
-    <HBox fx:id="authPanel" managed="true">
+    <HBox fx:id="authPanel">
         <TextField fx:id="loginField" HBox.hgrow="ALWAYS" promptText="Login"/>
         <PasswordField fx:id="passwordField" HBox.hgrow="ALWAYS" promptText="Password" onAction="#tryToAuth"/>
         <Button text="Войти" onAction="#tryToAuth"/>
     </HBox>
 
-    <TextArea fx:id="textArea" editable="false" VBox.vgrow="ALWAYS"/>
+    <HBox VBox.vgrow="ALWAYS">
+        <TextArea fx:id="textArea" editable="false"/>
+        <ListView fx:id="clientList" managed="false" visible="false" minWidth="100" onMouseClicked="#clickClientList"/>
+    </HBox>
+
 
     <HBox fx:id="msgPanel" visible="false" managed="false">
         <TextField fx:id="textField" HBox.hgrow="ALWAYS" promptText="Введите сообщение" onAction="#sendMessage" onKeyPressed="#pressEnter"/>
-        <Button text="Отправить" onAction="#sendMessage" onKeyPressed="#pressEnter"/>
+        <Button text="Отправить" onAction="#sendMessage" onKeyPressed="#pressEnter" minWidth="100"/>
     </HBox>
 </VBox>
 

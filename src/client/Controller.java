@@ -2,16 +2,20 @@ package client;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 
 import javafx.fxml.Initializable;
+import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -35,6 +39,8 @@ public class Controller implements Initializable {
     public TextField loginField;
     @FXML
     public PasswordField passwordField;
+    @FXML
+    public ListView clientList;
 
     Socket socket;
     DataInputStream in;
@@ -52,6 +58,8 @@ public class Controller implements Initializable {
         authPanel.setManaged(!authenticated);
         msgPanel.setVisible(authenticated);
         msgPanel.setManaged(authenticated);
+        clientList.setVisible(authenticated);
+        clientList.setManaged(authenticated);
         if (!authenticated) {
             nickname = "";
         }
@@ -62,6 +70,21 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         authenticated = false;
+        Platform.runLater(()->{
+            Stage stage = (Stage) textField.getScene().getWindow();
+            stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+                @Override
+                public void handle(WindowEvent windowEvent) {
+                    if(socket != null){
+                        try {
+                            out.writeUTF("/end");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+        });
     }
 
     public void connect() {
@@ -88,16 +111,22 @@ public class Controller implements Initializable {
                     //цикл работы
                     while (true) {
                         String str = in.readUTF();
-                        //Меняет собственное имя на "Я: " для более понятного отображения
-                        if (str.startsWith(nickname)) {
-                            String[] token = str.split(" ", 2);
-                            textArea.appendText("Я: " + token[1] + "\n");
-                        } else {
+                        if (str.startsWith("/")){
+                            if (str.equals("/end")) {
+                                setAuthenticated(false);
+                                break;
+                            }
+                            if(str.startsWith("/clientlist ")){
+                                String[] token = str.split(" ");
+                                Platform.runLater(()->{
+                                    clientList.getItems().clear();
+                                    for (int i = 1; i < token.length; i++) {
+                                        clientList.getItems().add(token[i]);
+                                    }
+                                });
+                            }
+                        }else{
                             textArea.appendText(str + "\n");
-                        }
-                        if (str.equals("/end")) {
-                            setAuthenticated(false);
-                            break;
                         }
                     }
                 } catch (SocketException e) {
@@ -159,5 +188,10 @@ public class Controller implements Initializable {
         Platform.runLater(() -> {
             ((Stage) textField.getScene().getWindow()).setTitle(title);
         });
+    }
+
+    public void clickClientList(MouseEvent mouseEvent) {
+        String receiver = clientList.getSelectionModel().getSelectedItem().toString();
+        textField.setText("/w " + receiver + " ");
     }
 }
